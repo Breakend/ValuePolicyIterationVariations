@@ -7,10 +7,10 @@ class MDP:
         self.T = np.array(T)
         # State space
         # Integer number of states
-        self.S = np.array(S)
+        self.S = S
         # Reward space
         # Form: vector, rewards for each state
         self.R = np.array(R)
         # Action space
         # integer, number of possible actions
-        self.A = np.array(A)
+        self.A = A
