@@ -16,7 +16,6 @@ import operator
 import random
 import numpy as np
 
-
 class MDP:
 
     """A Markov Decision Process, defined by an initial state, transition model,
@@ -37,8 +36,9 @@ class MDP:
         self.states = set()
         self.reward = {}
 
-    def R(self, state):
+    def R(self, state, action):
         "Return a numeric reward for this state."
+        # TODO : make this a matrix and action is also taken into account
         return self.reward[state]
 
     def T(self, state, action):
@@ -92,4 +92,3 @@ sequential_decision_environment = GridMDP([[-0.04, -0.04, -0.04, +1],
                                            [-0.04, None,  -0.04, -1],
                                            [-0.04, -0.04, -0.04, -0.04]],
                                           terminals=[(3, 2), (3, 1)])
-
