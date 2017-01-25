@@ -71,6 +71,7 @@ class JacobiValueIteration(ValueIteration):
             for s in range(self.mdp.S):
                 iteration += 1
                 #TODO: is this right?
+                # As in https://tspace.library.utoronto.ca/bitstream/1807/24381/6/Shlakhter_Oleksandr_201003_PhD_thesis.pdf
                 masked_transition = np.ma.array(self.mdp.T[s,a,:], mask=False)
                 masked_transition.mask[s] = True
                 V[s] = max([masked_transition.dot(self.mdp.R + gamma * Vold[s]) / (1 - gamma * T[s][a][s]) for a in range(self.mdp.A)])
