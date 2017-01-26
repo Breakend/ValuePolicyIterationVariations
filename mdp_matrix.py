@@ -43,26 +43,30 @@ class GridWorld(MDP):
             # Actions indexed as: 0:S, 1:E, 2:N, 3:W
             for act in range(A):
                 feas_grid = np.zeros((grid_size, grid_size))
-                if act == 0:
-                    if state_i+1 < grid_size:
-                        feas_grid[state_i+1, state_j] = 1.
+                if(act == 0 ):
+                    if(state_i+1 < grid_size):
+                        feas_grid[state_i+1, state_j] = 1
                     else:
-                        feas_grid[state_i, state_j] = 1.
-                elif act == 1:
-                    if state_j+1 < grid_size:
-                        feas_grid[state_i, state_j+1] = 1.
+                        feas_grid[state_i, state_j] = 1
+
+                elif(act == 1):
+                    if(state_j+1 < grid_size):
+                        feas_grid[state_i, state_j+1] = 1
                     else:
-                        feas_grid[state_i, state_j] = 1.
-                elif act == 2:
-                    if state_i-1 <= 0:
-                        feas_grid[state_i-1, state_j] = 1.
+                        feas_grid[state_i, state_j] = 1
+
+                elif(act == 2):
+                    if(state_i-1 >= 0):
+                        feas_grid[state_i-1, state_j] = 1
                     else:
-                        feas_grid[state_i, state_j] = 1.
-                elif act == 3:
-                    if state_j-1 <= 0:
-                        feas_grid[state_i, state_j-1] = 1.
+                        feas_grid[state_i, state_j] = 1
+
+                elif(act == 3):
+                    if(state_j-1 >= 0):
+                        feas_grid[state_i, state_j-1] = 1
                     else:
-                        feas_grid[state_i, state_j] = 1.
+                        feas_grid[state_i, state_j] = 1
+
 
                 # Flatten the feasibility grid and assign to transition matrix
                 T[start_state, act, :] = feas_grid.flatten()
