@@ -28,13 +28,17 @@ class ValueIteration(object):
                     vs.append(np.linalg.norm(V - optimal_value))
                 iteration += 1
                 v = Vold[s]
-                # import pdb; pdb.set_trace()
-                # V[s] = max([self.mdp.R[s] + gamma * self.mdp.T[s,a,:].dot( Vold) for a in range(self.mdp.A)])
-                V[s] = max([sum(self.mdp.T[s,a,k] *(self.mdp.R[k] + gamma * Vold[k]) for k in range(self.mdp.S)) for a in range(self.mdp.A)])
+
+
+                possibilities = []
+                for a in range(self.mdp.A):
+                    possibilities.append((self.mdp.R[s] + gamma * sum(self.mdp.T[s,a,k] * Vold[k] for k in range(self.mdp.S))))
+                V[s] = max(possibilities)
+
                 # Sutton, p.90 2nd edition draft (Jan. 2017)
-                # import pdb; pdb.set_trace()
+
                 delta = max(delta, abs(v - V[s]))
-                # print(delta)
+
             sweeps += 1
             if delta < theta:
                 break
@@ -49,8 +53,6 @@ class ValueIteration(object):
         pi = {}
         for s in range(self.mdp.S):
             possibilities = [sum(self.mdp.T[s,a,k] *(self.mdp.R[k] + gamma * V[k]) for k in range(self.mdp.S)) for a in range(self.mdp.A)]
-            # possibilities = [self.mdp.T[s,a,:].dot(self.mdp.R + gamma * V[s]) for a in range(self.mdp.A)]
-            # import pdb; pdb.set_trace()
             pi[s] = max(enumerate(possibilities), key=itemgetter(1))[0]
 
         return pi
@@ -90,10 +92,7 @@ class JacobiValueIteration(ValueIteration):
                 possibilities = []
 
                 for a in range(self.mdp.A):
-                    # masked_transition = np.ma.array(self.mdp.T[s,a,:], mask=False)
-                    # masked_transition.mask[s] = True
                     possibilities.append((self.mdp.R[s] + gamma * sum(self.mdp.T[s,a,k] * Vold[k] for k in range(self.mdp.S) if k != s)) /  (1. - gamma * self.mdp.T[s][a][s]))
-                    # possibilities.append(self.mdp.R[s] + gamma * np.ma.dot(masked_transition, Vold)  / (1. - gamma * self.mdp.T[s][a][s]) )
                 V[s] = max(possibilities)
 
                 # Sutton, p.90 2nd edition draft (Jan. 2017)
