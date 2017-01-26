@@ -117,6 +117,8 @@ class PrioritizedSweepingValueIteration(ValueIteration):
         vs = []
         iterations = 0
         while iterations < max_iterations:
+            #TODO: this is wrong right now, see http://webdocs.cs.ualberta.ca/~sutton/book/ebook/node98.html
+            # and also see http://aritter.github.io/courses/slides/mdp.pdf
             delta = 0
             iterations += 1
             if optimal_value is not None:
