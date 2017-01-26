@@ -34,4 +34,8 @@ vl = PrioritizedSweepingValueIteration(gw)
 optimal_policy, v, vsps = vl.run(optimal_value=optimal_value)
 plt.plot(vsps)
 
+import pdb; pdb.set_trace()
+
+plt.legend(['VI', 'GS', 'J', 'PS'], loc='upper right')
+
 plt.show()
