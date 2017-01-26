@@ -92,7 +92,7 @@ class JacobiValueIteration(ValueIteration):
                 for a in range(self.mdp.A):
                     # masked_transition = np.ma.array(self.mdp.T[s,a,:], mask=False)
                     # masked_transition.mask[s] = True
-                    possibilities.append(sum(self.mdp.T[s,a,k] * (self.mdp.R[k] + gamma * Vold[k]) for k in range(self.mdp.S) if k != s) /  (1. - gamma * self.mdp.T[s][a][s]))
+                    possibilities.append((self.mdp.R[s] + gamma * sum(self.mdp.T[s,a,k] * Vold[k] for k in range(self.mdp.S) if k != s)) /  (1. - gamma * self.mdp.T[s][a][s]))
                     # possibilities.append(self.mdp.R[s] + gamma * np.ma.dot(masked_transition, Vold)  / (1. - gamma * self.mdp.T[s][a][s]) )
                 V[s] = max(possibilities)
 
