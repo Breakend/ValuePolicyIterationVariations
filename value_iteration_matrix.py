@@ -1,5 +1,21 @@
 import numpy as np
 from operator import itemgetter
+from Queue import PriorityQueue
+
+
+class CustomPriorityQueue(PriorityQueue):
+    def __init__(self):
+        PriorityQueue.__init__(self)
+        self.counter = 0
+
+    def put(self, item, priority):
+        PriorityQueue.put(self, (priority, self.counter, item))
+        self.counter += 1
+
+    def get(self, *args, **kwargs):
+        _, _, item = PriorityQueue.get(self, *args, **kwargs)
+        return item
+
 
 class ValueIteration(object):
 
@@ -113,30 +129,66 @@ class GaussSeidelJacobiValueIteration(JacobiValueIteration):
 
 class PrioritizedSweepingValueIteration(ValueIteration):
 
-    def run(self, theta=0.001, gamma=.9, max_iterations= 3000, optimal_value = None):
+    def run(self, theta=0.001, gamma=.9, max_iterations= 500, optimal_value = None):
         # as per slides http://ipvs.informatik.uni-stuttgart.de/mlr/wp-content/uploads/2016/04/02-MarkovDecisionProcess.pdf
         # and http://www.jmlr.org/papers/volume6/wingate05a/wingate05a.pdf
         V = np.zeros(self.mdp.S)
         H = np.zeros(self.mdp.S)
         vs = []
         iterations = 0
-        while iterations < max_iterations:
-            #TODO: this is wrong right now, see http://webdocs.cs.ualberta.ca/~sutton/book/ebook/node98.html
-            # and also see http://aritter.github.io/courses/slides/mdp.pdf
-            delta = 0
-            iterations += 1
+
+        predecessors = {}
+        for state in range(self.mdp.S):
+          predecessors[state] = set()
+
+        priority_queue = CustomPriorityQueue()
+
+        vs = []
+
+        for state in range(self.mdp.S):
+            for a in range(self.mdp.A):
+                for s in self.mdp.T[state, a]:
+                    if s > 0:
+                        predecessors[s].add(state)
+
+            possibilities = []
+            v = V[state]
+            Vold = V.copy()
+            for a in range(self.mdp.A):
+                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * Vold[k] for k in range(self.mdp.S))))
+            V[state] = max(possibilities)
+
+            delta = abs(v - V[state])
+            priority_queue.put(state, -delta)
+
+        for i in range(max_iterations):
+            if priority_queue.empty():
+                break
             if optimal_value is not None:
                 vs.append(np.linalg.norm(V - optimal_value))
-            s = np.argmax(H)
+            state = priority_queue.get()
+            v = V[state]
             Vold = V.copy()
-            V[s] = max([self.mdp.R[s] + gamma * self.mdp.T[s,a,:].dot(Vold) for a in range(self.mdp.A)])
-            H[s] = abs(Vold - V)
-            import pdb; pdb.set_trace()
-            delta = max(delta, abs(Vold[s] - V[s]))
-            if delta < theta:
-                break
+            possibilities = []
+            for a in range(self.mdp.A):
+                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * Vold[k] for k in range(self.mdp.S))))
+            V[state] = max(possibilities)
 
-        print("Converged in %d iterations" % (iterations))
+            for p in predecessors[state]:
+                v = V[p]
+                Vold = V.copy()
+                possibilities = []
+                for a in range(self.mdp.A):
+                    possibilities.append((self.mdp.R[p] + gamma * sum(self.mdp.T[p,a,k] * Vold[k] for k in range(self.mdp.S))))
+                V[p] = max(possibilities)
+
+                delta = abs(v - V[p])
+                # print(delta)
+                if delta > theta:
+                    priority_queue.put(p, -delta)
+
+
+        print("Converged in %d iterations" % (i))
 
         pi = self.get_policy(V)
 

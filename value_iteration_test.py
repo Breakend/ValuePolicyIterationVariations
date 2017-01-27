@@ -36,12 +36,12 @@ vl = GaussSeidelJacobiValueIteration(gw)
 optimal_policy, v, vsj = vl.run(optimal_value=optimal_value, theta=0.01)
 plt.plot(vsj)
 
-# vl = PrioritizedSweepingValueIteration(gw)
-# optimal_policy, v, vsps = vl.run(optimal_value=optimal_value)
-# plt.plot(vsps)
+vl = PrioritizedSweepingValueIteration(gw)
+optimal_policy, v, vsps = vl.run(optimal_value=optimal_value)
+plt.plot(vsps)
 
 # import pdb; pdb.set_trace()
 
-plt.legend(['VI', 'GS', 'J', 'GSJ'], loc='upper right')
+plt.legend(['VI', 'GS', 'J', 'GSJ', 'PSVI'], loc='upper right')
 
 plt.show()
