@@ -114,7 +114,7 @@ class GaussSeidelJacobiValueIteration(JacobiValueIteration):
 
 class PrioritizedSweepingValueIteration(ValueIteration):
 
-    def run(self, theta=0.0001, gamma=.9, max_iterations= 500, optimal_value = None):
+    def run(self, theta=0.0001, gamma=.9, max_iterations= 2000, optimal_value = None):
         # as per slides http://ipvs.informatik.uni-stuttgart.de/mlr/wp-content/uploads/2016/04/02-MarkovDecisionProcess.pdf
         # and http://www.jmlr.org/papers/volume6/wingate05a/wingate05a.pdf
         V = np.zeros(self.mdp.S)
@@ -139,13 +139,12 @@ class PrioritizedSweepingValueIteration(ValueIteration):
 
             possibilities = []
             v = V[state]
-            Vold = V.copy()
             for a in range(self.mdp.A):
-                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * Vold[k] for k in range(self.mdp.S))))
-            V[state] = max(possibilities)
+                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * V[k] for k in range(self.mdp.S))))
+            prob = max(possibilities)
 
-            delta = abs(v - V[state])
-            priority_queue[state] = delta
+            delta = abs(v - prob)
+            priority_queue[state] = -delta
 
         for i in range(max_iterations):
             # import pdb; pdb.set_trace()
@@ -172,10 +171,10 @@ class PrioritizedSweepingValueIteration(ValueIteration):
                 priority = max(possibilities)
 
                 delta = abs(v - priority)
-                print(delta)
+                # print(delta)
                 # print(delta)
                 if delta > theta:
-                    priority_queue[p] = delta
+                    priority_queue[p] = -delta
 
 
 
