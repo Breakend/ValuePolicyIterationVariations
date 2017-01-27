@@ -18,8 +18,8 @@ def policy_iteration(mdp, gamma = 0.9, epsilon = 0.01, optimal_value = None):
                 v = V[s]
                 V[s] = sum(mdp.T[s, pol[s], k] * (mdp.R[k] + gamma * V[k]) for k in range(mdp.S))
                 delta = max(delta, abs(v-V[s]))
-            vs.append(np.linalg.norm(V - optimal_value))
-            v_iter+=1
+                vs.append(np.linalg.norm(V - optimal_value))
+                v_iter+=1
             if(delta < epsilon):
                 break
         # Policy improvement
@@ -100,9 +100,10 @@ def modified_policy_iteration(mdp, gamma = 0.9, epsilon = 1.0, m = 0, optimal_va
                        (mdp.R[k] + gamma * V[k])
                        for k in range(mdp.S))
                 delta = max(delta, abs(v-V[s]))
+                vs.append(np.linalg.norm(V - optimal_value))
+                v_iter += 1
             i += 1
-            vs.append(np.linalg.norm(V - optimal_value))
-            v_iter += 1
+
             if delta < epsilon/(2*gamma):
                 break
         n_iter += 1
