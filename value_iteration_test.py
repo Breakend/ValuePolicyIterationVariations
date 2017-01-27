@@ -1,5 +1,5 @@
 from mdp_matrix import GridWorld
-from value_iteration_matrix import ValueIteration, GaussSeidelValueIteration, JacobiValueIteration, PrioritizedSweepingValueIteration
+from value_iteration_matrix import ValueIteration, GaussSeidelValueIteration, JacobiValueIteration, PrioritizedSweepingValueIteration, GaussSeidelJacobiValueIteration
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,7 +17,7 @@ vl = ValueIteration(gw)
 
 optimal_policy, optimal_value, _  = vl.run()
 optimal_policy, v, vs = vl.run(optimal_value=optimal_value, theta=0.01)
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 plt.plot(vs)
 
 # import pdb; pdb.set_trace()
@@ -28,16 +28,20 @@ optimal_policy, v, vsgs = vl.run(optimal_value=optimal_value, theta=0.01)
 plt.plot(vsgs)
 # import pdb; pdb.set_trace()
 
-# vl = JacobiValueIteration(gw)
-# optimal_policy, v, vsj = vl.run(optimal_value=optimal_value)
-# plt.plot(vsj)
+vl = JacobiValueIteration(gw)
+optimal_policy, v, vsj = vl.run(optimal_value=optimal_value, theta=0.01)
+plt.plot(vsj)
 
-# vl = PrioritizedSweepingValueIteration(gw)
-# optimal_policy, v, vsps = vl.run(optimal_value=optimal_value)
-# plt.plot(vsps)
+vl = GaussSeidelJacobiValueIteration(gw)
+optimal_policy, v, vsj = vl.run(optimal_value=optimal_value, theta=0.01)
+plt.plot(vsj)
 
-import pdb; pdb.set_trace()
+vl = PrioritizedSweepingValueIteration(gw)
+optimal_policy, v, vsps = vl.run(optimal_value=optimal_value)
+plt.plot(vsps)
 
-plt.legend(['VI', 'GS', 'J', 'PS'], loc='upper right')
+# import pdb; pdb.set_trace()
+
+plt.legend(['VI', 'GS', 'J', 'GSJ', 'PSVI'], loc='upper right')
 
 plt.show()

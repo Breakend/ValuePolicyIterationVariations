@@ -1,5 +1,6 @@
 import numpy as np
 from operator import itemgetter
+from pqdict import pqdict
 
 class ValueIteration(object):
 
@@ -28,13 +29,17 @@ class ValueIteration(object):
                     vs.append(np.linalg.norm(V - optimal_value))
                 iteration += 1
                 v = Vold[s]
-                # import pdb; pdb.set_trace()
-                # V[s] = max([self.mdp.R[s] + gamma * self.mdp.T[s,a,:].dot( Vold) for a in range(self.mdp.A)])
-                V[s] = max([sum(self.mdp.T[s,a,k] *(self.mdp.R[k] + gamma * Vold[k]) for k in range(self.mdp.S)) for a in range(self.mdp.A)])
+
+
+                possibilities = []
+                for a in range(self.mdp.A):
+                    possibilities.append((self.mdp.R[s] + gamma * sum(self.mdp.T[s,a,k] * Vold[k] for k in range(self.mdp.S))))
+                V[s] = max(possibilities)
+
                 # Sutton, p.90 2nd edition draft (Jan. 2017)
-                # import pdb; pdb.set_trace()
+
                 delta = max(delta, abs(v - V[s]))
-                # print(delta)
+
             sweeps += 1
             if delta < theta:
                 break
@@ -49,8 +54,6 @@ class ValueIteration(object):
         pi = {}
         for s in range(self.mdp.S):
             possibilities = [sum(self.mdp.T[s,a,k] *(self.mdp.R[k] + gamma * V[k]) for k in range(self.mdp.S)) for a in range(self.mdp.A)]
-            # possibilities = [self.mdp.T[s,a,:].dot(self.mdp.R + gamma * V[s]) for a in range(self.mdp.A)]
-            # import pdb; pdb.set_trace()
             pi[s] = max(enumerate(possibilities), key=itemgetter(1))[0]
 
         return pi
@@ -90,10 +93,7 @@ class JacobiValueIteration(ValueIteration):
                 possibilities = []
 
                 for a in range(self.mdp.A):
-                    # masked_transition = np.ma.array(self.mdp.T[s,a,:], mask=False)
-                    # masked_transition.mask[s] = True
                     possibilities.append((self.mdp.R[s] + gamma * sum(self.mdp.T[s,a,k] * Vold[k] for k in range(self.mdp.S) if k != s)) /  (1. - gamma * self.mdp.T[s][a][s]))
-                    # possibilities.append(self.mdp.R[s] + gamma * np.ma.dot(masked_transition, Vold)  / (1. - gamma * self.mdp.T[s][a][s]) )
                 V[s] = max(possibilities)
 
                 # Sutton, p.90 2nd edition draft (Jan. 2017)
@@ -114,30 +114,68 @@ class GaussSeidelJacobiValueIteration(JacobiValueIteration):
 
 class PrioritizedSweepingValueIteration(ValueIteration):
 
-    def run(self, theta=0.001, gamma=.9, max_iterations= 3000, optimal_value = None):
+    def run(self, theta=0.0001, gamma=.9, max_iterations= 2000, optimal_value = None):
         # as per slides http://ipvs.informatik.uni-stuttgart.de/mlr/wp-content/uploads/2016/04/02-MarkovDecisionProcess.pdf
         # and http://www.jmlr.org/papers/volume6/wingate05a/wingate05a.pdf
         V = np.zeros(self.mdp.S)
         H = np.zeros(self.mdp.S)
         vs = []
         iterations = 0
-        while iterations < max_iterations:
-            #TODO: this is wrong right now, see http://webdocs.cs.ualberta.ca/~sutton/book/ebook/node98.html
-            # and also see http://aritter.github.io/courses/slides/mdp.pdf
-            delta = 0
-            iterations += 1
+
+        predecessors = {}
+        for state in range(self.mdp.S):
+          predecessors[state] = set()
+
+        priority_queue = pqdict()
+
+        vs = []
+
+        for state in range(self.mdp.S):
+            for a in range(self.mdp.A):
+                for index, s in enumerate(self.mdp.T[state, a]):
+                    if s > 0:
+                        predecessors[index].add(state)
+
+            possibilities = []
+            v = V[state]
+            for a in range(self.mdp.A):
+                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * V[k] for k in range(self.mdp.S))))
+            prob = max(possibilities)
+
+            delta = abs(v - prob)
+            priority_queue[state] = -delta
+
+        for i in range(max_iterations):
+            if len(priority_queue) == 0:
+                break
             if optimal_value is not None:
                 vs.append(np.linalg.norm(V - optimal_value))
-            s = np.argmax(H)
-            Vold = V.copy()
-            V[s] = max([self.mdp.R[s] + gamma * self.mdp.T[s,a,:].dot(Vold) for a in range(self.mdp.A)])
-            H[s] = abs(Vold - V)
-            import pdb; pdb.set_trace()
-            delta = max(delta, abs(Vold[s] - V[s]))
-            if delta < theta:
-                break
+            state = priority_queue.pop()
 
-        print("Converged in %d iterations" % (iterations))
+            # update V[state]
+            v = V[state]
+            Vold = V.copy()
+            possibilities = []
+            for a in range(self.mdp.A):
+                possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * Vold[k] for k in range(self.mdp.S))))
+            V[state] = max(possibilities)
+
+            # Update all predecessors priorities
+            for p in predecessors[state]:
+                v = V[p]
+                possibilities = []
+                for a in range(self.mdp.A):
+                    possibilities.append((self.mdp.R[p] + gamma * sum(self.mdp.T[p,a,k] * V[k] for k in range(self.mdp.S))))
+                priority = max(possibilities)
+
+                delta = abs(v - priority)
+
+                if delta > theta:
+                    priority_queue[p] = -delta
+
+
+
+        print("Converged in %d iterations" % (i))
 
         pi = self.get_policy(V)
 
