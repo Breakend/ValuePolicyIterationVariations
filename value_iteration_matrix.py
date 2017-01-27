@@ -88,7 +88,6 @@ class JacobiValueIteration(ValueIteration):
                 if optimal_value is not None:
                     vs.append(np.linalg.norm(V - optimal_value))
                 v = Vold[s]
-                #TODO: is this right?
                 # As in https://tspace.library.utoronto.ca/bitstream/1807/24381/6/Shlakhter_Oleksandr_201003_PhD_thesis.pdf
                 possibilities = []
 
