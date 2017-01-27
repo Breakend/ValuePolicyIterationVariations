@@ -130,11 +130,12 @@ class PrioritizedSweepingValueIteration(ValueIteration):
 
         vs = []
 
+        # import pdb; pdb.set_trace()
         for state in range(self.mdp.S):
             for a in range(self.mdp.A):
-                for s in self.mdp.T[state, a]:
+                for index, s in enumerate(self.mdp.T[state, a]):
                     if s > 0:
-                        predecessors[s].add(state)
+                        predecessors[index].add(state)
 
             possibilities = []
             v = V[state]
@@ -144,14 +145,17 @@ class PrioritizedSweepingValueIteration(ValueIteration):
             V[state] = max(possibilities)
 
             delta = abs(v - V[state])
-            priority_queue[state] = -delta
+            priority_queue[state] = delta
 
         for i in range(max_iterations):
+            # import pdb; pdb.set_trace()
             if len(priority_queue) == 0:
                 break
             if optimal_value is not None:
                 vs.append(np.linalg.norm(V - optimal_value))
             state = priority_queue.pop()
+
+            # update V[state]
             v = V[state]
             Vold = V.copy()
             possibilities = []
@@ -159,18 +163,20 @@ class PrioritizedSweepingValueIteration(ValueIteration):
                 possibilities.append((self.mdp.R[state] + gamma * sum(self.mdp.T[state,a,k] * Vold[k] for k in range(self.mdp.S))))
             V[state] = max(possibilities)
 
+            # Update all predecessors priorities
             for p in predecessors[state]:
                 v = V[p]
-                Vold = V.copy()
                 possibilities = []
                 for a in range(self.mdp.A):
-                    possibilities.append((self.mdp.R[p] + gamma * sum(self.mdp.T[p,a,k] * Vold[k] for k in range(self.mdp.S))))
-                V[p] = max(possibilities)
+                    possibilities.append((self.mdp.R[p] + gamma * sum(self.mdp.T[p,a,k] * V[k] for k in range(self.mdp.S))))
+                priority = max(possibilities)
 
-                delta = abs(v - V[p])
+                delta = abs(v - priority)
+                print(delta)
                 # print(delta)
                 if delta > theta:
-                    priority_queue[p] = -delta
+                    priority_queue[p] = delta
+
 
 
         print("Converged in %d iterations" % (i))
