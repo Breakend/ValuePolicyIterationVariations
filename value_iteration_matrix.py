@@ -1,21 +1,6 @@
 import numpy as np
 from operator import itemgetter
-from Queue import PriorityQueue
-
-
-class CustomPriorityQueue(PriorityQueue):
-    def __init__(self):
-        PriorityQueue.__init__(self)
-        self.counter = 0
-
-    def put(self, item, priority):
-        PriorityQueue.put(self, (priority, self.counter, item))
-        self.counter += 1
-
-    def get(self, *args, **kwargs):
-        _, _, item = PriorityQueue.get(self, *args, **kwargs)
-        return item
-
+from pqdict import pqdict
 
 class ValueIteration(object):
 
@@ -129,7 +114,7 @@ class GaussSeidelJacobiValueIteration(JacobiValueIteration):
 
 class PrioritizedSweepingValueIteration(ValueIteration):
 
-    def run(self, theta=0.001, gamma=.9, max_iterations= 500, optimal_value = None):
+    def run(self, theta=0.0001, gamma=.9, max_iterations= 500, optimal_value = None):
         # as per slides http://ipvs.informatik.uni-stuttgart.de/mlr/wp-content/uploads/2016/04/02-MarkovDecisionProcess.pdf
         # and http://www.jmlr.org/papers/volume6/wingate05a/wingate05a.pdf
         V = np.zeros(self.mdp.S)
@@ -141,7 +126,7 @@ class PrioritizedSweepingValueIteration(ValueIteration):
         for state in range(self.mdp.S):
           predecessors[state] = set()
 
-        priority_queue = CustomPriorityQueue()
+        priority_queue = pqdict()
 
         vs = []
 
@@ -159,14 +144,14 @@ class PrioritizedSweepingValueIteration(ValueIteration):
             V[state] = max(possibilities)
 
             delta = abs(v - V[state])
-            priority_queue.put(state, -delta)
+            priority_queue[state] = -delta
 
         for i in range(max_iterations):
-            if priority_queue.empty():
+            if len(priority_queue) == 0:
                 break
             if optimal_value is not None:
                 vs.append(np.linalg.norm(V - optimal_value))
-            state = priority_queue.get()
+            state = priority_queue.pop()
             v = V[state]
             Vold = V.copy()
             possibilities = []
@@ -185,7 +170,7 @@ class PrioritizedSweepingValueIteration(ValueIteration):
                 delta = abs(v - V[p])
                 # print(delta)
                 if delta > theta:
-                    priority_queue.put(p, -delta)
+                    priority_queue[p] = -delta
 
 
         print("Converged in %d iterations" % (i))
