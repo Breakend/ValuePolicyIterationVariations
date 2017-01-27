@@ -130,7 +130,6 @@ class PrioritizedSweepingValueIteration(ValueIteration):
 
         vs = []
 
-        # import pdb; pdb.set_trace()
         for state in range(self.mdp.S):
             for a in range(self.mdp.A):
                 for index, s in enumerate(self.mdp.T[state, a]):
@@ -147,7 +146,6 @@ class PrioritizedSweepingValueIteration(ValueIteration):
             priority_queue[state] = -delta
 
         for i in range(max_iterations):
-            # import pdb; pdb.set_trace()
             if len(priority_queue) == 0:
                 break
             if optimal_value is not None:
@@ -171,8 +169,7 @@ class PrioritizedSweepingValueIteration(ValueIteration):
                 priority = max(possibilities)
 
                 delta = abs(v - priority)
-                # print(delta)
-                # print(delta)
+
                 if delta > theta:
                     priority_queue[p] = -delta
 
