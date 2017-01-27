@@ -15,6 +15,9 @@ class ValueIteration(object):
         vs = []
         iteration = 0
         sweeps = 0
+        v0 = None
+        v1 = None
+        printed_v0v1 = False
         while True:
             delta = 0
             if self.gauss_seidel:
@@ -41,6 +44,14 @@ class ValueIteration(object):
                 delta = max(delta, abs(v - V[s]))
 
             sweeps += 1
+            if v0 is None:
+                v0 = V.copy()
+            elif v1 is None:
+                v1 = V.copy()
+            elif not printed_v0v1:
+                print "||V1 - V0|| = %f" % np.linalg.norm(v1 - v0)
+                printed_v0v1 = True
+
             if delta < theta:
                 break
 
